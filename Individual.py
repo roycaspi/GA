@@ -37,15 +37,15 @@ class Individual:
                 i, j = rand_state.randint(0, 150, 2)
             permutation[i], permutation[j] = permutation[j], permutation[i]
 
-    def crossover(self, partner):
+    def mappedCrossover(self, partner):
         lb, ub = self.__local_state.randint(0, self.__n, 2)  # step 1:generates the range for crossover
         while lb == ub:
             lb, ub = self.__local_state.randint(0, self.__n, 2)
         if lb > ub:
             lb, ub = ub, lb
         # todo think if the size of the crossover ( j - i ) is important - maybe we need to limit it
-        child1 = np.ones(len(self.__gene)) * -1  # -1 is a dummy value
-        child2 = np.ones(len(self.__gene)) * -1
+        child1 = np.ones(len(self.__gene), dtype=int) * -1  # -1 is a dummy value
+        child2 = np.ones(len(self.__gene), dtype=int) * -1
         child1[lb:ub] = self.__gene[lb:ub]  # step 2: copies parents' segments into children
         child2[lb:ub] = partner.__gene[lb:ub]
         midds = [list(self.__gene[lb:ub]), list(partner.__gene[lb:ub])]
@@ -68,6 +68,41 @@ class Individual:
                 child1[i] = num_to_fill
         return child1, child2
 
+    def orderCrossover(self, partner):
+        lb, ub = self.__local_state.randint(0, self.__n, 2)  # step 1:generates the range for crossover
+        while lb == ub:
+            lb, ub = self.__local_state.randint(0, self.__n, 2)
+        if lb > ub:
+            lb, ub = ub, lb
+        print(lb, ub)
+        # todo think if the size of the crossover ( j - i ) is important - maybe we need to limit it
+        child1 = np.ones(len(self.__gene), dtype=int) * -1  # -1 is a dummy value
+        child2 = np.ones(len(self.__gene), dtype=int) * -1
+        child1[lb:ub] = self.__gene[lb:ub]  # step 2: copies parents' segments into children
+        child2[lb:ub] = partner.__gene[lb:ub]
+        child1Seg = []
+        child2Seg = []
+        j = ub
+        for i in range(len(self.__gene)): #step 3: gets the genes from the dominant parent
+            if partner.__gene[j] not in child1:
+                child1Seg.append(partner.__gene[j])
+            if self.__gene[j] not in child2:
+                child2Seg.append((self.__gene[j]))
+            j += 1
+            if j == len(self.__gene):
+                j = 0
+        j = ub
+        for i in range(len(child1Seg)): #finalizes the gene
+            child1[j] = child1Seg[i]
+            child2[j] = child2Seg[i]
+            j += 1
+            if j == len(self.__gene):
+                j = 0
+        print(self.__gene, partner.__gene)
+        return child1, child2
+
+
+
     def get_gene(self):
         return self.__gene
 
@@ -76,6 +111,6 @@ class Individual:
 
 
 # if __name__ == "__main__":
-#     x = Individual(np.array([2, 5, 3, 6, 0, 1, 4]) + 1, 7, lambda x: sum(x))
-#     y = Individual(np.array([5, 6, 0, 1, 2, 3, 4]) + 1, 7, lambda x: sum(x))
-#     print(x.crossover(y))
+#     x = Individual(np.array([2, 5, 3, 6, 0, 1, 4]) + 1, 7, lambda x: sum(x), np.random.RandomState(None))
+#     y = Individual(np.array([5, 6, 0, 1, 2, 3, 4]) + 1, 7, lambda x: sum(x), np.random.RandomState(None))
+#     print(x.orderCrossover(y))

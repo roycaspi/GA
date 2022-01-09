@@ -28,5 +28,6 @@ if __name__ == "__main__":
     f = open("tokyo.dat")
     map = Destinations(f)
     local_state = np.random.RandomState(None)
-    adam = Individual(np.random.permutation(5) + 1, 5, fitnessFunc, local_state, map)
-    print(adam.get_fitness())
+    adam = Individual(np.random.permutation(8) + 1, 5, fitnessFunc, local_state, map)
+    eve = Individual(np.random.permutation(8) + 1, 5, fitnessFunc, local_state, map)
+    print(adam.orderCrossover(eve))
