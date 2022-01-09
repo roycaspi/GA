@@ -61,13 +61,13 @@ class Population:
         self.__population = next_gen
 
 
-if __name__ == "__main__":
-    mu = 10
-    lam = 10
-    t_func = lambda x: sum(x)
-    local_state = np.random.RandomState(None)
-    inds = [Individual(np.random.permutation(10) + 1, 10, t_func, local_state) for __ in range(mu)]
-    p = Population(inds, lam, t_func, local_state)
-    p.select_generation(p.generate_generation())
+# if __name__ == "__main__":
+#     mu = 10
+#     lam = 10
+#     t_func = lambda x: sum(x)
+#     local_state = np.random.RandomState(None)
+#     inds = [Individual(np.random.permutation(10) + 1, 10, t_func, local_state) for __ in range(mu)]
+#     p = Population(inds, lam, t_func, local_state)
+#     p.select_generation(p.generate_generation())
 
 
