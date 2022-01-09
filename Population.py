@@ -1,9 +1,9 @@
 import numpy as np
-import Individual
+from Individual import *
 
 class Population:
 
-    def __init__(self, pop, lam, elitism=True, seed=None):
+    def __init__(self, pop, lam, t_func, elitism=True, seed=None):
         """
 
         :param pop:
@@ -14,6 +14,7 @@ class Population:
         # self.__population = [ind.get_gene for ind in pop]
         self.__mu = len(pop)
         self.__lambda = lam
+        self.__fitness_func = t_func
         self.__elitism = elitism
         self.__local_state = np.random.RandomState(seed)
         self.__fitness_sum = None
@@ -32,10 +33,15 @@ class Population:
         return max
 
     def generate_generation(self):
+        """ returns a new generation of lambda permutations """
         new_gen = []
         for __ in range(self.__lambda // 2):
             p1, p2 = self.sexual_select(), self.sexual_select()
             c1, c2 = p1.crossover(p2)
-            ind = Individual(c1, )
-
+            Individual.mutate(c1, self.__local_state)
+            new_gen.append(c1)
+            Individual.mutate(c2, self.__local_state)
+            new_gen.append(c2)
+            # ind = Individual(c1, len(c1), self.__fitness_func, self.__local_state)
+        return new_gen
 
