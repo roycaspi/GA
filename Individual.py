@@ -1,9 +1,9 @@
-import random
 import numpy as np
+
 
 class Individual:
 
-    def __init__(self, n, t_func):
+    def __init__(self, permutation, n, t_func, rand_state):
         """
         An Individual is a permutation of the numbers 1 -150.
         :param n:       number of cities
@@ -12,68 +12,69 @@ class Individual:
         # tempGene = random.sample(range(2, n), n - 1) #random numbers array of n - 1 cities
         # self.__gene = "1".join([f' {x}' for x in tempGene])
         self.__n = n
-        self.__gene = np.random.permutation(n) + 1
+        self.__gene = permutation
         self.__fitness = t_func(self.__gene)
+        self.__local_state = rand_state
 
-    def mutate(self, mute_p):
+    @staticmethod
+    def mutate(permutation, rand_state, mute_p=-1):
         """
-        A single mutation is a swap of two numbers in the permutation.
+        A single mutation is a swap of two numbers in the permutation. A mutation occurs before an Individual
+        is initialized, therefore the function is static.
+        :param permutation:
+        :param rand_state:
         :param mute_p: float - the probability for a mutation
         :return:
         """
-        """
-        indexesToSwap = random.sample(range(2, len(self.gene) - 1), 2) #generates two random indexes to swap
-        l = list(self.gene)
-        l[indexesToSwap[0]], l[indexesToSwap[1]] = l[indexesToSwap[1]], l[indexesToSwap[0]]
-        gene = "".join([str(x) + " " for x in l])
-        """
-        mute_num = int(self.__n * np.random.normal(mute_p) + 1)     # the number of mutations to preform
+        if mute_p == -1:
+            mute_num = 1
+        else:
+            mute_num = int(len(permutation) * rand_state.normal(mute_p) + 1)  # the number of mutations to preform
         for __ in range(mute_num):
-            i, j = np.random.randint(0, 150, 2)
+            i, j = rand_state.randint(0, 150, 2)
             while i == j:
-                i, j = np.random.randint(0, 150, 2)
-            self.__gene[i], self.__gene[j] = self.__gene[j], self.__gene[i]
+                i, j = rand_state.randint(0, 150, 2)
+            permutation[i], permutation[j] = permutation[j], permutation[i]
 
-
-    def mate(self, partner):
-        i, j = np.random.randint(0, self.__n, 2) #step 1:generates the range for crossover
-        if i > j:
-            i, j = j, i
-        child1 = np.ones(len(self.__gene)) * -1
+    def crossover(self, partner):
+        lb, ub = self.__local_state.randint(0, self.__n, 2)  # step 1:generates the range for crossover
+        while lb == ub:
+            lb, ub = self.__local_state.randint(0, self.__n, 2)
+        if lb > ub:
+            lb, ub = ub, lb
+        # todo think if the size of the crossover ( j - i ) is important - maybe we need to limit it
+        child1 = np.ones(len(self.__gene)) * -1  # -1 is a dummy value
         child2 = np.ones(len(self.__gene)) * -1
-        child1[i:j] = self.__gene[i:j] #step 2: copies parents' segments into children
-        child2[i:j] = partner.__gene[i:j] #todo: check if reachable or need to remove '__'
-        numbers_done = set(np.concatenate((child1, child2)))
-        for i in range(1, len(self.__gene) + 1): #step 3: copies the numbers not in 'numbers_done' to children
-            if i not in numbers_done:
-                index1 = list(partner.__gene).index(i)
-                child1[index1] = i
-                index2 = list(self.__gene).index(i)
-                child1[index2] = i
-                numbers_done.add(i) #maybe a waste of memory
-        for i in range(child1): #step4: fills in the rest of childrens' gene
-            if child1[i] == -1:
-                num_to_fill = partner.__gene[i]
-                if num_to_fill not in child1:
-                    child1[i] = num_to_fill
-                else:
-                    while (True):
-                        num_to_fill = child2[list(child1).index(num_to_fill)]
-                        if num_to_fill not in child1:
-                            child1[i] = num_to_fill
-                            break;
-            if child2[i] == -1:
-                num_to_fill = self.__gene[i]
-                if num_to_fill not in child2:
-                    child2[i] = num_to_fill
-                else:
-                    while (True):
-                        num_to_fill = child1[list(child2).index(num_to_fill)]
-                        if num_to_fill not in child2:
-                            child2[i] = num_to_fill
-                            break;
+        child1[lb:ub] = self.__gene[lb:ub]  # step 2: copies parents' segments into children
+        child2[lb:ub] = partner.__gene[lb:ub]
+        midds = [list(self.__gene[lb:ub]), list(partner.__gene[lb:ub])]
+        # print(lb, ub)
+        # step 3 + 4
+        for i in list(range(lb)) + list(range(ub, self.__n)):
+            if self.__gene[i] not in midds[1]:
+                child2[i] = self.__gene[i]
+            else:
+                num_to_fill = midds[0][midds[1].index(self.__gene[i])]  # the parallel letter in self.__gene
+                while num_to_fill in midds[1]:
+                    num_to_fill = midds[0][midds[1].index(num_to_fill)]
+                child2[i] = num_to_fill
+            if partner.__gene[i] not in midds[0]:
+                child1[i] = partner.__gene[i]
+            else:
+                num_to_fill = midds[1][midds[0].index(partner.__gene[i])]  # the parallel letter in self.__gene
+                while num_to_fill in midds[0]:
+                    num_to_fill = midds[1][midds[0].index(num_to_fill)]
+                child1[i] = num_to_fill
         return child1, child2
 
+    def get_gene(self):
+        return self.__gene
+
+    def get_fitness(self):
+        return self.__fitness
 
 
-
+if __name__ == "__main__":
+    x = Individual(np.array([2, 5, 3, 6, 0, 1, 4]) + 1, 7, lambda x: sum(x))
+    y = Individual(np.array([5, 6, 0, 1, 2, 3, 4]) + 1, 7, lambda x: sum(x))
+    print(x.crossover(y))

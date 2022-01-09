@@ -28,9 +28,9 @@ def GA(n, max_evals, decodefct, selectfct, fitnessfct, max_attainable = np.inf, 
     fcurr_best = fmax = np.max(fitness)
     xmax = Genome[:,[np.argmin(fitness)]]
     history.append(fmax)
-    while (eval_cntr < max_evals) :
-#       Generate offspring population (recombination, mutation)
-        newGenome = np.empty([n,mu], dtype=int)
+    while eval_cntr < max_evals:
+        # Generate offspring population (recombination, mutation)
+        newGenome = np.empty([n, mu], dtype=int)
 #        1. sexual selection + 1-point recombination
         for i in range(int(mu/2)) :
             p1 = selectfct(Genome,fitness,local_state) 
