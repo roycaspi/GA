@@ -58,7 +58,7 @@ class Population:
                 worst = fitness.index(max(fitness))
                 if new_gen[i].get_fitness() < fitness[worst]:
                     next_gen[worst], fitness[worst] = new_gen[i], new_gen[i].get_fitness()
-        self.__population = new_gen
+        self.__population = next_gen
 
 
 if __name__ == "__main__":
