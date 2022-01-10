@@ -3,7 +3,7 @@ import numpy as np
 
 class Individual:
 
-    def __init__(self, permutation, n, t_func, rand_state, map):
+    def __init__(self, permutation, n, t_func, rand_state):
         """
         An Individual is a permutation of the numbers 1 -150.
         :param n:       number of cities
@@ -12,9 +12,9 @@ class Individual:
         # tempGene = random.sample(range(2, n), n - 1) #random numbers array of n - 1 cities
         # self.__gene = "1".join([f' {x}' for x in tempGene])
         self.__n = n
-        self.__map = map
+        # self.__map = map
         self.__gene = permutation
-        self.__fitness = t_func(self.__gene, map)
+        self.__fitness = t_func(self.__gene)
         self.__local_state = rand_state
 
     @staticmethod
@@ -32,9 +32,9 @@ class Individual:
         else:
             mute_num = int(len(permutation) * rand_state.normal(mute_p) + 1)  # the number of mutations to preform
         for __ in range(mute_num):
-            i, j = rand_state.randint(0, 150, 2)
+            i, j = rand_state.randint(0, len(permutation), 2)
             while i == j:
-                i, j = rand_state.randint(0, 150, 2)
+                i, j = rand_state.randint(0, len(permutation), 2)
             permutation[i], permutation[j] = permutation[j], permutation[i]
 
     def mappedCrossover(self, partner):
@@ -101,16 +101,25 @@ class Individual:
         print(self.__gene, partner.__gene)
         return child1, child2
 
+    def crossover(self, partner, imp=0):
+        if imp == 0:
+            return self.mappedCrossover(partner)
+        if imp == 1:
+            return self.orderCrossover(partner)
 
-
+    @property
     def get_gene(self):
         return self.__gene
 
-    def get_fitness(self):
+    @property
+    def fitness(self):
         return self.__fitness
 
 
-# if __name__ == "__main__":
-#     x = Individual(np.array([2, 5, 3, 6, 0, 1, 4]) + 1, 7, lambda x: sum(x), np.random.RandomState(None))
-#     y = Individual(np.array([5, 6, 0, 1, 2, 3, 4]) + 1, 7, lambda x: sum(x), np.random.RandomState(None))
-#     print(x.orderCrossover(y))
+if __name__ == "__main__":
+    x = Individual(np.array([2, 5, 3, 6, 0, 1, 4]) + 1, 7, lambda x: sum(x), np.random.RandomState(None))
+    y = Individual(np.array([5, 6, 0, 1, 2, 3, 4]) + 1, 7, lambda x: sum(x), np.random.RandomState(None))
+    print("am i here?")
+    print(x.fitness)
+    print(type(x.fitness))
+    print(x.orderCrossover(y))
