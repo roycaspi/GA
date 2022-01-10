@@ -60,6 +60,11 @@ class Population:
         self.__population = next_gen
         self.__fitnesses = np.array(fitness)
 
+    def best(self):
+        best = self.__population[list(self.__fitnesses).index(np.min(self.__fitnesses))]
+        return best.fitness, best.get_gene
+
+
     def print(self):
         for i in range(self.__mu):
             print(f"{i}: {self.__population[i].get_gene}")
