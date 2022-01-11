@@ -2,19 +2,23 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import os
+
 from utils import *
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     f = open("tokyo.dat")
     d = Destinations(f)
+    f.close()
 
     """ outer configuration parameters """
     local_state = np.random.RandomState(None)
     n = 150
     max_evals = 10 ** 5
-    Nruns = 2
+    Nruns = 1
 
     """ inner configuration parameters """
     mu = 100
@@ -23,82 +27,70 @@ if __name__ == '__main__':
     lam = 100
     elitism = True
 
-    for run in range(Nruns):
-        fbest = []
-        xbest = []
+    """ main logging file - document all runs """
+    with open('logger.txt') as reader:
+        lines = reader.readlines()
+    runs_n = int(lines[0].split()[-1])
+    tf_cals = int(lines[1].split()[-1])
+    best_result = float(lines[2].split()[-1])
+    best_run = int(lines[3].split()[-1])
+    f.close()
+
+    fbest = []
+    rbest = []
+
+    for run in tqdm(range(Nruns)):
+        print()         # line down after progress bar
         history = []
+
         p = Population(
             [Individual(np.random.permutation(n) + 1, n, d.fitnessFunc, local_state) for __ in range(mu)],
             lam, d.fitnessFunc, local_state, elitism
         )
         eval_ctr = mu
-        curr_best = best = p.best()
-        history.append(curr_best[0])
+        curr_f, curr_r = best_f, best_r = p.best()
+        history.append(curr_f)
         while eval_ctr < max_evals:
-            p.select_generation(p.generate_generation())
+            p.select_generation(
+                p.generate_generation(pm, pc))    # recombination (crossover, mutation) -> selection
             eval_ctr += lam
-            curr_best = p.best()
-            if curr_best[0] < best[0]:
-                best = curr_best
-            history.append(curr_best[0])
+            curr_f, curr_r = p.best()
+            if curr_f < best_f:
+                best_f, best_r = curr_f, curr_r
+            history.append(curr_f)
             if np.mod(eval_ctr, int(max_evals / 10)) == 0:
                 print(f"{eval_ctr} evals:\n"
-                      f"Current best fitness: {best[0]} for the route:\n{best[1]}")
-            # if fmax == max_attainable:
-            #     print(eval_cntr, " evals: fmax=", fmax, "; done!")
-            break
-        # return xmax, fmax, history
+                      f"Current best fitness: {best_f} for the route:\n{best_r}\n" + '='*60)
+
         plt.semilogy(np.array(history))
+        plt.title(f"Run {runs_n}")
+        plt.savefig(os.getcwd() + "\\log\\" + f'run_plot{runs_n}.png')
         plt.show()
-        print(f"Run {run}:\n"
-              f"Shortest route found:\n{best[1]}\n"
-              f"{best[0]} km long")
-        fbest.append(best[1])
-        xbest.append(best[0])
-    print("====\n Best ever: ", min(fbest), "x*=", xbest[fbest.index(min(fbest))])
-"""
-# Generate offspring population (recombination, mutation)
-        newGenome = np.empty([n, mu], dtype=int)
-#        1. sexual selection + 1-point recombination
-        for i in range(int(mu/2)) :
-            p1 = selectfct(Genome,fitness,local_state) 
-            p2 = selectfct(Genome,fitness,local_state)
-            if local_state.uniform() < pc : #recombination
-                idx = local_state.randint(n,dtype=int)
-                Xnew1 = np.concatenate((p1[:idx],p2[idx:]))
-                Xnew2 = np.concatenate((p2[:idx],p1[idx:]))
-            else : #no recombination; two parents are copied as are
-                Xnew1 = np.copy(p1)
-                Xnew2 = np.copy(p2)
-#        2. mutation
-            mut1_bits = local_state.uniform(size=(n,1)) < pm
-            mut2_bits = local_state.uniform(size=(n,1)) < pm
-            Xnew1[mut1_bits] = 1-Xnew1[mut1_bits]
-            Xnew2[mut2_bits] = 1-Xnew2[mut2_bits]
-#            
-            newGenome[:,[2*i-1]] = np.copy(Xnew1)
-            newGenome[:,[2*i]] = np.copy(Xnew2)
-        #The best individual of the parental population is kept
-        newGenome[:,[mu-1]] = np.copy(Genome[:,[np.argmax(fitness)]])
-        Genome = np.copy(newGenome)
-        Phenotype.clear()
-        for k in range(mu) :
-            Phenotype.append(decodefct(Genome[:,[k]]))
-        fitness = fitnessfct(Phenotype)
-        eval_cntr += mu
-        fcurr_best = np.max(fitness)
-        if fmax < fcurr_best :
-            fmax = fcurr_best
-            xmax = Genome[:,[np.argmax(fitness)]]
-        history.append(fcurr_best)
-        if np.mod(eval_cntr,int(max_evals/10))==0 :
-            print(eval_cntr," evals: fmax=",fmax)
-        if fmax == max_attainable :
-            print(eval_cntr," evals: fmax=",fmax,"; done!")
-            break
-    return xmax,fmax,history
-"""
+        run_log = os.open(os.getcwd() + "\\log\\" + f'run_log{runs_n}.txt', os.O_CREAT | os.O_RDWR)
+        os.write(run_log, str.encode(f"Run {run}:\n"
+                                     f"Shortest route found:\n{best_r}\n"
+                                     f"{best_f} km long\n\n{'=' * 60}\n"
+                                     f"Run Parameters:\n"
+                                     f"local_state = np.random.RandomState(None)\n"
+                                     f"n = 150\nmax_evals = 10 ** 5\nNruns = 1\nmu = 100\npc = 0.37\npm = 2/n\n"
+                                     f"lam = 100\nelitism = True\n"))
+        fbest.append(best_f)
+        rbest.append(best_r)
 
+        tf_cals += eval_ctr
+        if best_f < best_result:
+            best_result = best_f
+            best_run = runs_n
+        runs_n += 1
 
+        # write to logger
+        log_params = [runs_n, tf_cals, best_result, best_run]
+        for i in range(len(log_params)):
+            lines[i] = ' '.join((lines[i].split())[:-1] + [str(log_params[i])])
+        with open('logger.txt', 'w') as writer:
+            writer.write('\n'.join(lines))
+
+    print('\n' + '='*60)
+    print(f"Best ever: {best_result} achieved in run num: {best_run}\n")
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

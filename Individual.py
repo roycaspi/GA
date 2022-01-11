@@ -28,14 +28,37 @@ class Individual:
         :return:
         """
         if mute_p == -1:
-            mute_num = 1
-        else:
-            mute_num = int(len(permutation) * rand_state.normal(mute_p) + 1)  # the number of mutations to preform
-        for __ in range(mute_num):
+            mute_p = 1 / len(permutation)
+        # mute_num = int(len(permutation) * rand_state.normal(mute_p))  # the number of mutations to preform
+        # if mute_num < 0:
+        #     mute_num *= -1
+        for i in range(len(permutation)):
+            if np.random.rand() < mute_p:
+                j = rand_state.randint(0, len(permutation))
+                while i == j:
+                    j = rand_state.randint(0, len(permutation))
+                permutation[i], permutation[j] = permutation[j], permutation[i]
+
+    """
+    def mutate(permutation, rand_state, mute_p=-1):
+        A single mutation is a swap of two numbers in the permutation. A mutation occurs before an Individual
+        is initialized, therefore the function is static.
+        :param permutation:
+        :param rand_state:
+        :param mute_p: float - the probability for a mutation
+        :return:
+        if mute_p == -1:
+            mute_p = 1 / len(permutation)
+        mute_num = int(len(permutation) * rand_state.normal(mute_p))  # the number of mutations to preform
+        if mute_num < 0:
+            mute_num *= -1
+        for i in range(len(permutation)):
+            if np.random.rand() < mute_p:
             i, j = rand_state.randint(0, len(permutation), 2)
             while i == j:
                 i, j = rand_state.randint(0, len(permutation), 2)
             permutation[i], permutation[j] = permutation[j], permutation[i]
+    """
 
     def mappedCrossover(self, partner):
         lb, ub = self.__local_state.randint(0, self.__n, 2)  # step 1:generates the range for crossover
