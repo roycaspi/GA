@@ -14,18 +14,17 @@ if __name__ == '__main__':
     d = Destinations(f)
     f.close()
 
-    """ outer configuration parameters """
-    local_state = np.random.RandomState(None)
+    """ configuration parameters """
     n = 150
     max_evals = 10 ** 5
     Nruns = 1
-
-    """ inner configuration parameters """
     mu = 100
     pc = 0.37
     pm = 2/n
+    crossover_implementation = "mapped"
     lam = 100
     elitism = True
+    seed = None
 
     """ main logging file - document all runs """
     with open('logger.txt') as reader:
@@ -35,6 +34,11 @@ if __name__ == '__main__':
     best_result = float(lines[2].split()[-1])
     best_run = int(lines[3].split()[-1])
     f.close()
+    local_state = np.random.RandomState(seed)
+    crossover_dict = {
+        "mapped": 0,
+        "order": 1
+    }
 
     fbest = []
     rbest = []
@@ -50,9 +54,12 @@ if __name__ == '__main__':
         eval_ctr = mu
         curr_f, curr_r = best_f, best_r = p.best()
         history.append(curr_f)
+
+        # recombination (crossover, mutation) -> selection
+        p.select_generation(
+            p.generate_generation(pm, pc, crossover_dict[crossover_implementation]))
+
         while eval_ctr < max_evals:
-            p.select_generation(
-                p.generate_generation(pm, pc))    # recombination (crossover, mutation) -> selection
             eval_ctr += lam
             curr_f, curr_r = p.best()
             if curr_f < best_f:
@@ -71,9 +78,9 @@ if __name__ == '__main__':
                                      f"Shortest route found:\n{best_r}\n"
                                      f"{best_f} km long\n\n{'=' * 60}\n"
                                      f"Run Parameters:\n"
-                                     f"local_state = np.random.RandomState(None)\n"
-                                     f"n = 150\nmax_evals = 10 ** 5\nNruns = 1\nmu = 100\npc = 0.37\npm = 2/n\n"
-                                     f"lam = 100\nelitism = True\n"))
+                                     f"n = {n}\nmax_evals = {max_evals}\nNruns = {Nruns}\nmu = {mu}\npc = {pc}\n"
+                                     f"pm = {pm}\ncrossover_implementation = {crossover_implementation}\nlam = {lam}\n"
+                                     f"elitism = {elitism}\nseed = {seed}"))
         fbest.append(best_f)
         rbest.append(best_r)
 

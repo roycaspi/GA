@@ -30,13 +30,13 @@ class Population:
             if probs[i] > roulette:
                 return self.__population[i]
 
-    def generate_generation(self, mute_prob, cross_prob):
+    def generate_generation(self, mute_prob, cross_prob, cros_imp):
         """ returns a new generation of lambda permutations """
         new_gen = []
         for __ in range(self.__lambda // 2):
             p1, p2 = self.sexual_select(), self.sexual_select()
             if np.random.rand() < cross_prob:
-                c1, c2 = p1.crossover(p2)           # todo - set crossover implementation, from main
+                c1, c2 = p1.crossover(p2, cros_imp)
             else:
                 c1, c2 = np.copy((p1.get_gene, p2.get_gene))
             Individual.mutate(c1, self.__local_state, mute_prob)
