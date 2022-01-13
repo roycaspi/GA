@@ -1,4 +1,4 @@
-Number of runs: 2
-Total number of calls to target function: 200000
-Best result achieved: 17360.123613223943
-In run number 1
+Number of runs: 111
+Total number of calls to target function: 39000840
+Best result achieved: 8487.004561080917
+In run number 108

@@ -31,16 +31,4 @@ if __name__ == "__main__":
     Nruns = 2
     fbest = []
     xbest = []
-    # for i in range(Nruns):
-    #     #        xmax,fmax,history = GA(n,evals,decoding_ones,select_proportional,TeleCom,n,i+37)
-    #     xmax, fmax, history = GA(n, evals, no_decoding, select_proportional, ONEMAX, n, i + 37)
-    #     plt.semilogy(np.array(history))
-    #     plt.show()
-    #     print(i, ": maximal ONEMAX found is ", fmax, " at location ", xmax.T)
-    #     fbest.append(fmax)
-    #     xbest.append(xmax)
-    # print("====\n Best ever: ", max(fbest), "x*=", xbest[fbest.index(max(fbest))].T)
-    # adam = Individual(np.random.permutation(8) + 1, 5, d.fitnessFunc, local_state)
-    # eve = Individual(np.random.permutation(8) + 1, 5, d.fitnessFunc, local_state)
-    # print(adam.orderCrossover(eve))
-    # print(adam.fitness)
+

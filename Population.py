@@ -1,3 +1,5 @@
+import numpy as np
+
 from Individual import *
 
 
@@ -23,19 +25,35 @@ class Population:
     def sexual_select(self):
         """ select an individual for recombination using roulette probabilities """
         fitness_sum = np.sum(self.__fitnesses)
-        cumsum = np.cumsum(self.__fitnesses)
-        probs = np.array([(cumsum[i] / fitness_sum) for i in range(self.__mu)])
-        roulette = np.random.rand()         # uniform [0-1]
+        cumsum = np.cumsum(-1 * self.__fitnesses + fitness_sum)
+        roulette = np.random.rand() * cumsum.max()
         for i in range(self.__mu):          # todo - binary search if needed
-            if probs[i] > roulette:
+            if cumsum[i] > roulette:
                 return self.__population[i]
 
-    def generate_generation(self, mute_prob, cross_prob, cros_imp):
+    @staticmethod
+    def roulette_select(population, fitnesses, mu):
+        """ select a population using roulette probabilities """
+        while len(population) > mu:
+            cumsum = np.cumsum(fitnesses)
+            roulette = np.random.rand() * cumsum.max()
+            for i in range(len(population)):
+                if cumsum[i] < roulette:
+                    np.delete(cumsum, i)
+                    population.pop(i)
+                    fitnesses.pop(i)
+                    continue
+
+
+    def generate_generation(self, mute_prob, cross_prob, cros_imp, rand_couple):
         """ returns a new generation of lambda permutations """
         new_gen = []
         for __ in range(self.__lambda // 2):
             p1, p2 = self.sexual_select(), self.sexual_select()
-            if np.random.rand() < cross_prob:
+            if rand_couple and __ == 0:
+                c1 = np.random.permutation(len(p1.get_gene)) + 1
+                c2 = np.random.permutation(len(p1.get_gene)) + 1
+            elif np.random.rand() < cross_prob:
                 c1, c2 = p1.crossover(p2, cros_imp)
             else:
                 c1, c2 = np.copy((p1.get_gene, p2.get_gene))
@@ -46,19 +64,20 @@ class Population:
             # ind = Individual(c1, len(c1), self.__fitness_func, self.__local_state)
         return new_gen
 
-    def select_generation(self, new_gen):
+    def select_generation(self, new_gen, rand_elit):
         """ sets population for the mu best individuals """
-        if self.__elitism:
+        if self.__elitism and not np.random.rand() < rand_elit:
             new_gen += self.__population
         next_gen = []
         fitness = []
         for i in range(len(new_gen)):
+
             if len(next_gen) < self.__mu:
                 next_gen.append(new_gen[i])
                 fitness.append(new_gen[i].fitness)
             else:
                 worst = fitness.index(np.max(fitness))
-                if new_gen[i].fitness < fitness[worst]:         # replace worst individual with new_gen[i]
+                if new_gen[i].fitness < fitness[worst]:         # replace the worst individual with new_gen[i]
                     next_gen[worst] = new_gen[i]
                     fitness[worst] = new_gen[i].fitness
         self.__population = next_gen
